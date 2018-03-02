@@ -22,3 +22,14 @@
 "btc" : 10650 ##Default BTC price
 }
 ``` 
+## Dependencies
+
+```
+pip3 install slackclient pandas
+```
+
+## Usage
+
+```
+./main.py
+```
