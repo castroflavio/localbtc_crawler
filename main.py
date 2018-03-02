@@ -155,7 +155,8 @@ class LocalBitcoinsSpider:
         finally:
             print("Finally")
             if (self.__total_updated > 0):
-                self.send_email_via_mailjet()
+                self.send_alarm_via_slack()
+                #self.send_email_via_mailjet()
 
 
     @staticmethod
@@ -173,11 +174,22 @@ class LocalBitcoinsSpider:
         df=df[df['age']<3]
         df.to_csv(self.__output_csv, index_label='trader')
 
+    def send_alarm_via_slack(self):
+        print("Sending ALARM")
+        self.sc=SlackClient(self.__slack_token)
+        try:
+           self.sc.api_call(
+            "chat.postMessage",
+            channel="robot",
+            text="Novos traders:" + str(self.__data.index.values)
+            )
+        except:
+           print(sys.exc_info()[0])
+
     def send_email_via_mailjet(self):
         try:
             if not self.__from_address or not self.__to_address:
                 return
-
             print('Sending email...')
             mailjet = Client(auth=(self.__api_public_key, self.__api_secret_key), version='v3.1')
             data = {
@@ -232,9 +244,10 @@ def job():
     dest_email = args['dest_email']
     api_public_key = args['api_public_key']
     api_secret_key = args['api_secret_key']
+    slack_token = args['slack_token']
     btc = args['btc']
     btc = updatedBtcPrice(btc)
-    with LocalBitcoinsSpider(url, file, email, dest_email, subject, body, api_public_key, api_secret_key , btc=btc) as spider:
+    with LocalBitcoinsSpider(url, file, email, dest_email, subject, body, api_public_key, api_secret_key , slack_token, btc=btc) as spider:
         spider.grab_data()
 
 if __name__ == '__main__':
